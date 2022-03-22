@@ -6,7 +6,7 @@ const encodedString = Buffer.from(`${consumerKey}:${consumerSecret}`).toString(
 );
 // const decodedString = Buffer.from(encodedString, "base64").toString("ascii");
 
-const authString = `Basic ${encodedString}`;
+const authString = `Basic OHhyNGhIckZCVkRRUHdMZmtMc0xBQWgwOWdzc2d5MnM6VDRFWTZCdEtHYzhjQ0FQNA==`;
 
 exports.fetchAccessToken = async () => {
   const res = await axios.get(
