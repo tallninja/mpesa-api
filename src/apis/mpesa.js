@@ -1,5 +1,5 @@
 const { default: axios } = require('axios');
-const { consumerKey, consumerSecret } = require('../config');
+const { consumerKey, consumerSecret } = require('../../config');
 
 const encodedString = Buffer.from(`${consumerKey}:${consumerSecret}`).toString(
   'base64'

@@ -3,14 +3,14 @@ const { default: axios } = require('axios');
 
 const { fetchAccessToken } = require('./apis/mpesa');
 
-app.get('/', (req, res) => {
+router.get('/', (req, res) => {
   res.status(200).json({
     message: 'Success reached server successfully !',
     url: req.url,
   });
 });
 
-app.get('/mpesa/register-url', async (req, res) => {
+router.get('/mpesa/register-url', async (req, res) => {
   const ngrokUrl = 'http://c860ca78557f.ngrok.io';
   const accessToken = await fetchAccessToken();
   try {
@@ -35,7 +35,7 @@ app.get('/mpesa/register-url', async (req, res) => {
   }
 });
 
-app.get('/mpesa/c2b', async (req, res) => {
+router.get('/mpesa/c2b', async (req, res) => {
   try {
     const accessToken = await fetchAccessToken();
     const response = await axios.post(
@@ -62,12 +62,12 @@ app.get('/mpesa/c2b', async (req, res) => {
   }
 });
 
-app.post('/validation', (req, res) => {
+router.post('/validation', (req, res) => {
   console.log(req.body);
   res.status(200).send({});
 });
 
-app.post('/confirmation', (req, res) => {
+router.post('/confirmation', (req, res) => {
   console.log(req.body);
   res.status(200).send({});
 });
