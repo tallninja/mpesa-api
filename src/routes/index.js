@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { default: axios } = require('axios');
 
-const { fetchAccessToken } = require('./apis/mpesa');
+const { fetchAccessToken } = require('../apis/mpesa');
 
 router.get('/', (req, res) => {
   res.status(200).json({
