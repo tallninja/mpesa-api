@@ -1,85 +1,82 @@
+const fs = require('fs');
+const path = require('path');
 const router = require('express').Router();
-const axios = require('axios').default;
+const daraja = require('../apis/daraja');
 const { StatusCodes: Sc } = require('http-status-codes');
 
-const { fetchAccessToken } = require('../apis/mpesa');
+const getAccessToken = require('../middlewares/getAccessToken');
 
-router.get('/mpesa/accesstoken', async (req, res) => {
-  const accessToken = await fetchAccessToken();
-  return res.status(Sc.OK).json({ token: accessToken });
+router.get('/mpesa/accesstoken', [getAccessToken], async (req, res) => {
+	return res.status(Sc.OK).json({ token: req.token });
 });
 
 router.post('/validation', (req, res) => {
-  console.log(req.body);
-  return res.status(Sc.OK).end();
+	console.log(req.body);
+	return res.status(Sc.OK).end();
 });
 
 router.post('/confirmation', (req, res) => {
-  console.log(req.body);
-  return res.status(Sc.OK).end();
+	console.log(req.body);
+	return res.status(Sc.OK).end();
 });
 
-router.get('/mpesa/register-url', async (req, res) => {
-  const ngrokUrl = 'http://f5e7-41-90-190-49.ngrok.io';
-  const accessToken = await fetchAccessToken();
-  try {
-    const response = await axios.post(
-      'https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl',
-      {
-        ValidationURL: `${ngrokUrl}/api/payments/validation`,
-        ConfirmationURL: `${ngrokUrl}/api/payments/confirmation`,
-        ResponseType: 'Canceled',
-        ShortCode: '174379',
-      },
-      {
-        headers: {
-          Authorization: `Bearer ppSu2y5SaSAUJ4VzehDmRCQGMRBo`,
-        },
-      }
-    );
-    console.log(response.data);
-    return;
-  } catch (error) {
-    console.log('Error:', error);
-    return res.status(Sc.INTERNAL_SERVER_ERROR).send({ err: error });
-  }
+router.get('/mpesa/register-url', [getAccessToken], async (req, res) => {
+	const ltUrl = fs.readFileSync(
+		path.join(__dirname.split('/').slice(0, -2).join('/'), 'url.txt'),
+		'utf8'
+	);
+	try {
+		const registerUrlResponse = await daraja.post(
+			'/mpesa/c2b/v1/registerurl',
+			req.body,
+			{
+				headers: {
+					Authorization: `Bearer ${req.token}`,
+				},
+			}
+		);
+		return res.status(Sc.OK).json(registerUrlResponse.data);
+	} catch (error) {
+		console.log('Error:', error);
+		return res.status(Sc.INTERNAL_SERVER_ERROR).send({ err: error });
+	}
 });
 
-router.get('/mpesa/c2b', async (req, res) => {
-  try {
-    const accessToken = await fetchAccessToken();
-    const response = await axios.post(
-      'https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate',
-      {
-        CommandID: 'CustomerPayBillOnline',
-        Amount: 100,
-        Msisdn: 254708374149,
-        BillRefNumber: 600000,
-        ShortCode: 174379,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          ContentType: 'application/json',
-        },
-      }
-    );
+router.post('/mpesa/c2b', [getAccessToken], async (req, res) => {
+	try {
+		const response = await daraja.post('/mpesa/c2b/v1/simulate', req.body, {
+			headers: {
+				Authorization: `Bearer ${req.token}`,
+				ContentType: 'application/json',
+			},
+		});
 
-    res.send(response.data);
-  } catch (error) {
-    res.send(error);
-    console.log(error);
-  }
+		res.status(Sc.OK).json(response.data);
+	} catch (error) {
+		res.send(error);
+		console.log(error);
+	}
 });
 
 router.post('/validation', (req, res) => {
-  console.log(req.body);
-  return res.status(Sc.OK).send({});
+	console.log(req.body);
+
+	if (req.body?.TransAmount < 100) {
+		return res.status(Sc.OK).json({
+			ResultCode: 'C2B00013', // Invalid Amount
+			ResultDesc: 'Rejected',
+		});
+	}
+
+	return res.status(Sc.OK).json({
+		ResultCode: 0,
+		ResultDesc: 'Accepted',
+	});
 });
 
 router.post('/confirmation', (req, res) => {
-  console.log(req.body);
-  return res.status(Sc.OK).send({});
+	console.log(req.body);
+	return res.status(Sc.OK).send({ success: true });
 });
 
 module.exports = router;

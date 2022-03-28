@@ -1,8 +1,41 @@
+@base_url=http://localhost:5000
+@payments_api={{base_url}}/api/payments
+@mpesa_api={{payments_api}}/mpesa
+
 ### Root route
-GET http://localhost:5000/
+GET {{base_url}}/
 
 ### FETCH access token
-GET http://localhost:5000/api/payments/mpesa/accesstoken
+GET {{mpesa_api}}/accesstoken
 
 ### Register URL
-GET http://localhost:5000/api/payments/mpesa/register-url
+GET {{mpesa_api}}/register-url
+Content-Type: application/json
+
+{
+	"ValidationURL": "http://ec2-13-245-172-226.af-south-1.compute.amazonaws.com:5005/validation",
+    "ConfirmationURL": "http://ec2-13-245-172-226.af-south-1.compute.amazonaws.com:5005/confirmation",
+    "ResponseType": "Canceled",
+    "ShortCode": "174379"
+}
+
+### C2B transaction
+POST {{mpesa_api}}/c2b
+Content-Type: application/json
+
+{
+    "ShortCode":"174379",
+    "CommandID":"CustomerPayBillOnline",
+    "Amount":"200",
+    "Msisdn":"254708374149",
+    "BillRefNumber":"254708374149"
+}
+
+
+### Test validation endpoint
+POST https://thin-parrot-96.loca.lt/api/payments/validation
+Content-Type: application/json
+
+{
+    "Data": "test"
+}
